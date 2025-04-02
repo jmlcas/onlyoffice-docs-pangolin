@@ -1,0 +1,29 @@
+services:
+
+  onlyoffice-docs:
+    image: onlyoffice/documentserver:latest  #latest-arm64 (para Raspberry Pi)
+    container_name: onlyoffice-docs
+    restart: unless-stopped
+    stdin_open: true
+    tty: true    
+    ports:
+      - "8500:80"
+      - "8543:443"
+    volumes:
+      - ./onlyoffice/Docs/logs:/var/log/onlyoffice
+      - ./onlyoffice/Docs/data:/var/www/onlyoffice/Data
+      - ./onlyoffice/Docs/lib:/var/lib/onlyoffice
+      - ./onlyoffice/Docs/db:/var/lib/postgresql      
+    environment:
+      - JWT_ENABLED=true
+      - JWT_SECRET=my_secret
+      - JWT_HEADER=Authorization
+      - JWT_IN_BODY=true
+    entrypoint:
+     - "sh"
+     - "-c"
+     - |
+       echo 'change nginx conf to req https..'
+       sed -i "s/[$]the_scheme[;]/https;/g" /etc/onlyoffice/documentserver/nginx/includes/http-common.conf
+       echo 'done! starting server...'
+       /app/ds/run-document-server.sh
